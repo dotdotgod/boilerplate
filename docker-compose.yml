@@ -1,0 +1,52 @@
+services:
+  proxy:
+    image: nginx:latest
+    ports:
+      - ${PORT}:80
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api
+      - front
+  db:
+    image: pgvector/pgvector:pg16
+    restart: always
+    ports:
+      - ${DB_PORT}:5432
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+      - POSTGRES_DB=${DB_DATABASE}
+    volumes:
+      - ./.rdbms-data:/var/lib/postgresql/data
+      - ./.postgresql/postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+  api:
+    restart: always
+    image: node:22.17-slim
+    env_file:
+      - .env
+    working_dir: /api
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+    volumes:
+      - ./api:/api
+    depends_on:
+      - db
+    command: sh -c "npm install -g pnpm && pnpm run start:debug"
+  front:
+    restart: always
+    image: node:22.17-slim
+    env_file:
+      - .env
+    working_dir: /front
+    volumes:
+      - ./front:/front
+      - ./front_node_modules:/front/node_modules
+    command: sh -c "npm install -g pnpm && pnpm install && pnpm run dev"
+    depends_on:
+      - api
+volumes:
+  front_node_modules:
+    driver: local
