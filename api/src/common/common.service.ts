@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
-import { User } from '../user/entities/user.entity';
-import { Oauth } from '../user/entities/oauth.entity';
+import { User } from 'src/user/entities/user.entity';
+import { Oauth } from 'src/user/entities/oauth.entity';
 
 dotenv.config({ path: `${process.cwd()}/../.env` });
 

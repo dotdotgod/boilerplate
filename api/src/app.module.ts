@@ -27,6 +27,13 @@ import { UserModule } from './user/user.module';
         DB_USER: Joi.string().required(),
         DB_PASS: Joi.string().required(),
         DB_DATABASE: Joi.string().required(),
+        BASE_URL: Joi.string().required(),
+        GOOGLE_CLIENT_ID: Joi.string().required(),
+        GOOGLE_CLIENT_SECRET: Joi.string().required(),
+        JWT_ACCESS_SECRET: Joi.string().required(),
+        JWT_REFRESH_SECRET: Joi.string().required(),
+        ACCESS_TOKEN_EXPIRES_IN: Joi.number().required(),
+        REFRESH_TOKEN_EXPIRES_IN: Joi.number().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({

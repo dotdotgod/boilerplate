@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   CreateDateColumn,
   DeleteDateColumn,
@@ -32,6 +33,7 @@ export class BaseEntity {
   })
   created_at: Date;
 
+  @Exclude()
   @UpdateDateColumn({
     nullable: false,
     default: () => 'CURRENT_TIMESTAMP',

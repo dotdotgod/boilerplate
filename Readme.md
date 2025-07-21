@@ -26,17 +26,46 @@ DB_PORT=5432               # Database port
 DB_USER=postgres           # Database username
 DB_PASS=your_password      # Database password
 DB_DATABASE=your_db_name   # Database name
+
+# Google OAuth Settings
+GOOGLE_CLIENT_ID=your_google_client_id           # Google OAuth Client ID from Google Cloud Console
+GOOGLE_CLIENT_SECRET=your_google_client_secret   # Google OAuth Client Secret from Google Cloud Console
+
+# JWT Settings
+JWT_ACCESS_SECRET=your_jwt_access_secret_key      # JWT Access Token Secret (required)
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_key    # JWT Refresh Token Secret (required)
+ACCESS_TOKEN_EXPIRES_IN=15m                       # Access Token expiration time (e.g., 15m, 1h, 1d)
+REFRESH_TOKEN_EXPIRES_IN=7d                       # Refresh Token expiration time in days
+
+# Frontend Settings
+FRONTEND_URL=http://localhost:80                  # Frontend URL for OAuth redirects
 ```
 
 ### Environment Variable Descriptions
 
+#### Application Settings
 - `NODE_ENV`: Application runtime environment (development/production)
 - `PORT`: Proxy server port accessible from outside
+
+#### Database Settings
 - `DB_HOST`: Database host address
 - `DB_PORT`: Database port (PostgreSQL default: 5432)
 - `DB_USER`: PostgreSQL username
 - `DB_PASS`: PostgreSQL password
 - `DB_DATABASE`: Database name to use
+
+#### Google OAuth Settings
+- `GOOGLE_CLIENT_ID`: Google OAuth Client ID from Google Cloud Console
+- `GOOGLE_CLIENT_SECRET`: Google OAuth Client Secret from Google Cloud Console
+
+#### JWT Settings
+- `JWT_ACCESS_SECRET`: Secret key for JWT access token generation (required)
+- `JWT_REFRESH_SECRET`: Secret key for JWT refresh token generation (required)
+- `ACCESS_TOKEN_EXPIRES_IN`: Access token expiration time (e.g., 15m, 1h, 1d)
+- `REFRESH_TOKEN_EXPIRES_IN`: Refresh token expiration time in days (e.g., 7d)
+
+#### Frontend Settings
+- `FRONTEND_URL`: Frontend application URL for OAuth redirects
 
 ## 🐳 Docker Compose Commands
 
@@ -149,20 +178,36 @@ boilerplate/
 
 ## 🚀 Getting Started
 
-1. Configure environment variables
+1. Install required packages
+
+   ```bash
+   cd api
+   pnpm add passport-google-oauth20 @types/passport-google-oauth20 @nestjs/jwt
+   ```
+
+2. Configure environment variables
 
    ```bash
    cp .env.example .env
    # Edit .env file with appropriate values
    ```
 
-2. Start services
+3. Set up Google OAuth
+
+   - Go to [Google Cloud Console](https://console.cloud.google.com/)
+   - Create a new project or select existing one
+   - Enable Google+ API
+   - Create OAuth 2.0 Client ID credentials
+   - Add your callback URL: `http://localhost:80/auth/google/callback`
+   - Copy Client ID and Client Secret to your `.env` file
+
+4. Start services
 
    ```bash
    docker-compose up -d
    ```
 
-3. Run database migrations
+5. Run database migrations
 
    ```bash
    docker-compose exec api pnpm run typeorm:migration:run
@@ -172,7 +217,7 @@ boilerplate/
    pnpm run typeorm:migration:run
    ```
 
-4. Access in browser
+6. Access in browser
    - Frontend: http://localhost:${PORT}
    - API Documentation: http://localhost:${PORT}/v1/docs (Swagger)
 
@@ -183,6 +228,7 @@ boilerplate/
 - **Proxy**: Nginx
 - **Database**: PostgreSQL with pgvector
 - **Container**: Docker, Docker Compose
+- **Authentication**: Google OAuth 2.0, Passport.js
 
 ## 📝 Additional Information
 

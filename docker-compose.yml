@@ -30,6 +30,8 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
+    ports:
+      - 9229:9229
     volumes:
       - ./api:/api
     depends_on:
@@ -43,10 +45,9 @@ services:
     working_dir: /front
     volumes:
       - ./front:/front
-      - ./front_node_modules:/front/node_modules
+      - front_node_modules:/front/node_modules
     command: sh -c "npm install -g pnpm && pnpm install && pnpm run dev"
     depends_on:
       - api
 volumes:
   front_node_modules:
-    driver: local
