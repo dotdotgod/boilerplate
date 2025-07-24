@@ -3,12 +3,15 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { Oauth, OauthProviderEnum } from './entities/oauth.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { EmailVerification } from './entities/email-verification.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { GoogleUserInfo, JwtTokenDto, OAuthUser } from './dtos/sign.dto';
+import { MailService } from '../mail/mail.service';
 import * as argon2 from 'argon2';
 import * as crypto from 'crypto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UserService {
@@ -19,8 +22,11 @@ export class UserService {
     private readonly oauthRepository: Repository<Oauth>,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(EmailVerification)
+    private readonly emailVerificationRepository: Repository<EmailVerification>,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async findByUuid(user_uuid: string) {
@@ -30,14 +36,18 @@ export class UserService {
   }
 
   async findByPassword(email: string, password: string) {
-    // todo password hash 처리
-
     const user = await this.userRepository.findOne({
       where: { email },
     });
 
     if (!user) {
       throw new BadRequestException('Invalid email or password');
+    }
+
+    if (!user.is_verified) {
+      throw new BadRequestException(
+        'Please verify your email address before signing in',
+      );
     }
 
     const isPasswordValid = await argon2.verify(user.password, password);
@@ -305,5 +315,182 @@ export class UserService {
       .delete()
       .where('expires_at < :now', { now: new Date() })
       .execute();
+  }
+
+  async generateVerificationToken(userId: number): Promise<string> {
+    const token = uuidv4();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10분 후 만료
+
+    // 만료된 미사용 토큰들 또는 해당 사용자의 미사용 토큰들을 정리
+    await this.emailVerificationRepository
+      .createQueryBuilder()
+      .delete()
+      .where(
+        '(is_used = :isUsed AND expires_at < :now) OR (is_used = :isUsed AND user_id = :userId)',
+        {
+          isUsed: false,
+          now: new Date(),
+          userId,
+        },
+      )
+      .execute();
+
+    await this.emailVerificationRepository.save({
+      user_id: userId,
+      token,
+      expires_at: expiresAt,
+      is_used: false,
+    });
+
+    return token;
+  }
+
+  async generateRegistrationToken(email: string): Promise<string> {
+    const token = uuidv4();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 30); // 30분 후 만료
+
+    // 기존 미사용 토큰들을 먼저 정리
+    await this.emailVerificationRepository.delete({
+      email,
+      is_used: false,
+    });
+
+    await this.emailVerificationRepository.save({
+      email,
+      token,
+      expires_at: expiresAt,
+      is_used: false,
+    });
+
+    return token;
+  }
+
+  async verifyEmailToken(token: string): Promise<boolean> {
+    const verification = await this.emailVerificationRepository.findOne({
+      where: { token, is_used: false },
+      relations: ['user'],
+    });
+
+    if (!verification) {
+      throw new BadRequestException('Invalid verification token');
+    }
+
+    if (verification.expires_at < new Date()) {
+      throw new BadRequestException('Verification token has expired');
+    }
+
+    // 토큰을 사용 처리
+    verification.is_used = true;
+    await this.emailVerificationRepository.save(verification);
+
+    // 사용자를 인증 완료 처리
+    const user = await this.userRepository.findOne({
+      where: { id: verification.user_id },
+    });
+
+    if (user) {
+      user.is_verified = true;
+      user.verified_at = new Date();
+      await this.userRepository.save(user);
+    }
+
+    return true;
+  }
+
+  async sendVerificationEmail(
+    userId: number,
+    email: string,
+    name: string,
+  ): Promise<boolean> {
+    const token = await this.generateVerificationToken(userId);
+    return this.mailService.sendVerificationEmail(email, name, token);
+  }
+
+  async resendVerificationEmail(email: string): Promise<boolean> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    if (user.is_verified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    return this.sendVerificationEmail(user.id, user.email, user.name);
+  }
+
+  async cleanupExpiredVerifications(): Promise<void> {
+    await this.emailVerificationRepository
+      .createQueryBuilder()
+      .delete()
+      .where('expires_at < :now', { now: new Date() })
+      .execute();
+  }
+
+  async sendRegistrationEmail(email: string): Promise<boolean> {
+    const token = await this.generateRegistrationToken(email);
+    return this.mailService.sendRegistrationEmail(email, token);
+  }
+
+  async getRegistrationInfo(token: string): Promise<string> {
+    const verification = await this.emailVerificationRepository.findOne({
+      where: { token, is_used: false },
+    });
+
+    if (!verification) {
+      throw new BadRequestException('Invalid registration token');
+    }
+
+    if (verification.expires_at < new Date()) {
+      throw new BadRequestException('Registration token has expired');
+    }
+
+    return verification.email;
+  }
+
+  async completeRegistration(
+    token: string,
+    name: string,
+    password: string,
+  ): Promise<User> {
+    const verification = await this.emailVerificationRepository.findOne({
+      where: { token, is_used: false },
+    });
+
+    if (!verification) {
+      throw new BadRequestException('Invalid registration token');
+    }
+
+    if (verification.expires_at < new Date()) {
+      throw new BadRequestException('Registration token has expired');
+    }
+
+    // Check if user already exists
+    const existingUser = await this.findByEmail(verification.email);
+    if (existingUser) {
+      throw new BadRequestException('User with this email already exists');
+    }
+
+    // Create the user
+    const user = await this.createUser(name, verification.email, {
+      password,
+    });
+
+    // Mark user as verified immediately
+    user.is_verified = true;
+    user.verified_at = new Date();
+    await this.userRepository.save(user);
+
+    // Mark token as used
+    verification.is_used = true;
+    verification.user_id = user.id;
+    await this.emailVerificationRepository.save(verification);
+
+    return user;
   }
 }

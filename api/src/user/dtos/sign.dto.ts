@@ -1,5 +1,5 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsString, IsEmail } from 'class-validator';
 import { User } from '../entities/user.entity';
 import { Type } from 'class-transformer';
 
@@ -73,4 +73,43 @@ export class GoogleAuthDto {
 
 export class RefreshTokenDto {
   refresh_token?: string;
+}
+
+export class VerifyEmailDto {
+  @IsString()
+  @ApiProperty()
+  token: string;
+}
+
+export class ResendVerificationDto {
+  @IsString()
+  @ApiProperty()
+  email: string;
+}
+
+// New DTOs for email-first registration flow
+export class EmailRegistrationDto {
+  @IsEmail()
+  @ApiProperty()
+  email: string;
+}
+
+export class CompleteRegistrationDto {
+  @IsString()
+  @ApiProperty()
+  token: string;
+
+  @IsString()
+  @ApiProperty()
+  name: string;
+
+  @IsString()
+  @ApiProperty()
+  password: string;
+}
+
+export class GetRegistrationInfoDto {
+  @IsString()
+  @ApiProperty()
+  token: string;
 }

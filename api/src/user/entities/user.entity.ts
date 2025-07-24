@@ -10,12 +10,7 @@ export class User extends BaseEntity {
   @Column({ nullable: false })
   @ApiProperty()
   @IsString()
-  first_name: string;
-
-  @Column({ nullable: false })
-  @ApiProperty()
-  @IsString()
-  last_name: string;
+  name: string;
 
   @Column({ unique: true, nullable: false })
   @ApiProperty()
@@ -26,6 +21,14 @@ export class User extends BaseEntity {
   @Exclude()
   @IsString()
   password: string;
+
+  @Column({ default: false })
+  @ApiProperty()
+  is_verified: boolean;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  @ApiProperty()
+  verified_at: Date;
 
   @Exclude()
   @OneToMany(() => Oauth, (oauth) => oauth.user, { cascade: true })

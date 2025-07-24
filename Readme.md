@@ -39,6 +39,12 @@ REFRESH_TOKEN_EXPIRES_IN=7d                       # Refresh Token expiration tim
 
 # Frontend Settings
 FRONTEND_URL=http://localhost:80                  # Frontend URL for OAuth redirects
+
+# SMTP Email Settings
+SMTP_HOST=smtp.gmail.com                          # SMTP server host
+SMTP_PORT=587                                     # SMTP server port
+SMTP_USER=your_email@gmail.com                   # SMTP username (email)
+SMTP_PASS=your_app_password                      # SMTP password (app password for Gmail)
 ```
 
 ### Environment Variable Descriptions
@@ -66,6 +72,12 @@ FRONTEND_URL=http://localhost:80                  # Frontend URL for OAuth redir
 
 #### Frontend Settings
 - `FRONTEND_URL`: Frontend application URL for OAuth redirects
+
+#### SMTP Email Settings
+- `SMTP_HOST`: SMTP server hostname (e.g., smtp.gmail.com)
+- `SMTP_PORT`: SMTP server port (587 for TLS, 465 for SSL)
+- `SMTP_USER`: SMTP username (usually your email address)
+- `SMTP_PASS`: SMTP password (use app password for Gmail)
 
 ## 🐳 Docker Compose Commands
 

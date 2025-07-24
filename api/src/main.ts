@@ -68,7 +68,7 @@ async function bootstrap() {
       .build();
 
     const documentFactory = () => SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('/v1/api/docs', app, documentFactory);
+    SwaggerModule.setup('v1/api/docs', app, documentFactory);
   } else {
     app.use(helmet());
   }

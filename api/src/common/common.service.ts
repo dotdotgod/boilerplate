@@ -2,6 +2,8 @@ import * as dotenv from 'dotenv';
 import { PostgresConnectionOptions } from 'typeorm/driver/postgres/PostgresConnectionOptions';
 import { User } from 'src/user/entities/user.entity';
 import { Oauth } from 'src/user/entities/oauth.entity';
+import { EmailVerification } from 'src/user/entities/email-verification.entity';
+import { RefreshToken } from 'src/user/entities/refresh-token.entity';
 
 dotenv.config({ path: `${process.cwd()}/../.env` });
 
@@ -29,7 +31,7 @@ export class CommonService {
     username: this.getValue('DB_USER'),
     password: this.getValue('DB_PASS'),
     database: this.getValue('DB_DATABASE'),
-    entities: [User, Oauth],
+    entities: [User, Oauth, EmailVerification, RefreshToken],
     logging: this.getValue('NODE_ENV') === 'debug' || ['warn', 'error'],
     synchronize: false,
     autoLoadEntities: true,

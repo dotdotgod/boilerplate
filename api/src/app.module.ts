@@ -8,6 +8,7 @@ import * as Joi from 'joi';
 
 import { commonService } from './common/common.service';
 import { UserModule } from './user/user.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -32,8 +33,12 @@ import { UserModule } from './user/user.module';
         GOOGLE_CLIENT_SECRET: Joi.string().required(),
         JWT_ACCESS_SECRET: Joi.string().required(),
         JWT_REFRESH_SECRET: Joi.string().required(),
-        ACCESS_TOKEN_EXPIRES_IN: Joi.number().required(),
-        REFRESH_TOKEN_EXPIRES_IN: Joi.number().required(),
+        ACCESS_TOKEN_EXPIRES_IN: Joi.string().required(),
+        REFRESH_TOKEN_EXPIRES_IN: Joi.string().required(),
+        SMTP_HOST: Joi.string().required(),
+        SMTP_PORT: Joi.number().required(),
+        SMTP_USER: Joi.string().email().required(),
+        SMTP_PASS: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -47,6 +52,7 @@ import { UserModule } from './user/user.module';
       },
     }),
     UserModule,
+    MailModule,
   ],
   controllers: [AppController],
 })

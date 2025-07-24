@@ -13,14 +13,21 @@ import {
   GoogleAuthDto,
   SignInReqDto,
   SignInResDto,
-  SignUpReqDto,
+  VerifyEmailDto,
+  ResendVerificationDto,
+  EmailRegistrationDto,
+  CompleteRegistrationDto,
+  GetRegistrationInfoDto,
 } from './dtos/sign.dto';
 import { Response, Request } from 'express';
 import { Type } from 'class-transformer';
 import { AuthGuard } from '@nestjs/passport';
 import { User } from './entities/user.entity';
 
-@Controller('user')
+@Controller({
+  path: 'user',
+  version: '1',
+})
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -102,27 +109,86 @@ export class UserController {
     });
   }
 
-  @Post('sign-up')
-  async signUp(@Body() signUpReqDto: SignUpReqDto, @Res() res: Response) {
-    const { name, email, password } = signUpReqDto;
-    const user = await this.userService.createUser(name, email, {
-      password,
-    });
-    const { accessToken, refreshToken } =
-      await this.userService.generateTokens(user);
+  @Post('register-email')
+  async registerEmail(
+    @Body() emailRegistrationDto: EmailRegistrationDto,
+    @Res() res: Response,
+  ) {
+    const { email } = emailRegistrationDto;
 
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    // Check if user already exists
+    const existingUser = await this.userService.findByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException('User with this email already exists');
+    }
+
+    // Send registration email with token
+    const success = await this.userService.sendRegistrationEmail(email);
+
+    if (!success) {
+      throw new BadRequestException('Failed to send registration email');
+    }
 
     return res.json({
-      message: 'Sign up successful',
-      user,
-      access_token: accessToken,
+      message:
+        'Registration email sent. Please check your email to complete registration.',
+      success: true,
     });
+  }
+
+  @Post('get-registration-info')
+  async getRegistrationInfo(
+    @Body() getRegistrationInfoDto: GetRegistrationInfoDto,
+  ) {
+    const { token } = getRegistrationInfoDto;
+
+    try {
+      const email = await this.userService.getRegistrationInfo(token);
+      return {
+        email,
+        success: true,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @Post('complete-registration')
+  async completeRegistration(
+    @Body() completeRegistrationDto: CompleteRegistrationDto,
+    @Res() res: Response,
+  ) {
+    const { token, name, password } = completeRegistrationDto;
+
+    try {
+      const user = await this.userService.completeRegistration(
+        token,
+        name,
+        password,
+      );
+      const { accessToken, refreshToken } =
+        await this.userService.generateTokens(user);
+
+      res.cookie('refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      return res.json({
+        message: 'Registration completed successfully',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          is_verified: user.is_verified,
+        },
+        access_token: accessToken,
+      });
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Post('logout')
@@ -149,5 +215,41 @@ export class UserController {
 
     res.clearCookie('refresh_token');
     return res.status(200).json({ message: 'Logged out successfully' });
+  }
+
+  @Post('verify-email')
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    const { token } = verifyEmailDto;
+
+    try {
+      await this.userService.verifyEmailToken(token);
+      return {
+        message: 'Email verified successfully',
+        success: true,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @Post('resend-verification')
+  async resendVerification(
+    @Body() resendVerificationDto: ResendVerificationDto,
+  ) {
+    const { email } = resendVerificationDto;
+
+    try {
+      const success = await this.userService.resendVerificationEmail(email);
+      if (success) {
+        return {
+          message: 'Verification email sent successfully',
+          success: true,
+        };
+      } else {
+        throw new BadRequestException('Failed to send verification email');
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }
