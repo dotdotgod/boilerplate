@@ -39,6 +39,6 @@ export class Oauth extends BaseEntity {
   @Column({ nullable: false, type: 'jsonb' })
   @ApiProperty()
   @IsString()
-  @Exclude()  // 민감한 정보: OAuth 제공자의 원본 응답 데이터
+  @Exclude() // 민감한 정보: OAuth 제공자의 원본 응답 데이터
   origin_response: string;
 }

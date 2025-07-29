@@ -30,7 +30,7 @@ export class EmailVerification extends BaseEntity {
   @Index()
   @ApiProperty()
   @IsString()
-  @Exclude()  // 민감한 정보: 인증 토큰
+  @Exclude() // 민감한 정보: 인증 토큰
   token: string;
 
   @Column({ nullable: false, type: 'timestamp' })

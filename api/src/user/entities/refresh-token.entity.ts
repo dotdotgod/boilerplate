@@ -23,7 +23,7 @@ export class RefreshToken extends BaseEntity {
   @Index()
   @ApiProperty()
   @IsString()
-  @Exclude()  // 민감한 정보: 토큰 해시
+  @Exclude() // 민감한 정보: 토큰 해시
   token_hash: string;
 
   @Column({ nullable: false, type: 'timestamp' })

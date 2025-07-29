@@ -66,6 +66,8 @@ export const useAuthStore = create<AuthStore>()(
           state.accessToken = accessToken;
           state.lastRefreshTime = Date.now();
         });
+        // Save token to localStorage
+        localStorage.setItem('access_token', accessToken);
       },
 
       // ==================== 토큰 관리 액션들 ====================
@@ -74,6 +76,12 @@ export const useAuthStore = create<AuthStore>()(
         set((state) => {
           state.accessToken = token;
         });
+        // Update localStorage
+        if (token) {
+          localStorage.setItem('access_token', token);
+        } else {
+          localStorage.removeItem('access_token');
+        }
       },
 
       getAccessToken: () => {
@@ -97,9 +105,19 @@ export const useAuthStore = create<AuthStore>()(
           state.accessToken = null;
           state.lastRefreshTime = null;
         });
+        // Clear localStorage
+        localStorage.removeItem('access_token');
       },
 
       initializeAuth: () => {
+        // Check localStorage for token
+        const storedToken = localStorage.getItem('access_token');
+        if (storedToken && !get().accessToken) {
+          set((state) => {
+            state.accessToken = storedToken;
+          });
+        }
+
         const hasToken = !!get().accessToken;
 
         set((state) => {

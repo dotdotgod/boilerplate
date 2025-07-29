@@ -5,10 +5,13 @@ import { ConfigModule } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import { addTransactionalDataSource } from 'typeorm-transactional';
 import * as Joi from 'joi';
+import { APP_GUARD } from '@nestjs/core';
 
 import { commonService } from './common/common.service';
 import { UserModule } from './user/user.module';
 import { MailModule } from './mail/mail.module';
+import { AiAgentModule } from './ai-agent/ai-agent.module';
+import { CsrfGuard } from './common/guards/csrf.guard';
 
 @Module({
   imports: [
@@ -39,6 +42,8 @@ import { MailModule } from './mail/mail.module';
         SMTP_PORT: Joi.number().required(),
         SMTP_USER: Joi.string().email().required(),
         SMTP_PASS: Joi.string().required(),
+        ANTHROPIC_API_KEY: Joi.string().optional(),
+        GOOGLE_GENERATIVE_AI_API_KEY: Joi.string().optional(),
       }),
     }),
     TypeOrmModule.forRootAsync({
@@ -53,7 +58,14 @@ import { MailModule } from './mail/mail.module';
     }),
     UserModule,
     MailModule,
+    AiAgentModule,
   ],
   controllers: [AppController],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
+    },
+  ],
 })
 export class AppModule {}

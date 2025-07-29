@@ -249,6 +249,10 @@ pnpm run typeorm:migration:revert
 ### 인증 가드 사용
 
 ```typescript
+// 필요한 가드 import
+import { AccessJwtAuthGuard } from './guards/access-jwt-auth.guard';
+import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard';
+
 // Access Token 인증이 필요한 엔드포인트
 @UseGuards(AccessJwtAuthGuard)
 @Get('profile')
@@ -529,11 +533,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
 ## 주요 패턴 요약
 
-1. **모듈 구조**: 도메인별 모듈 분리 (user, mail, common)
+1. **모듈 구조**: 도메인별 모듈 분리 (user, mail, common, ai-agent)
 2. **인증 전략**: JWT (access/refresh) + Google OAuth
+   - Access Token: `AccessJwtAuthGuard` 사용
+   - Refresh Token: `RefreshJwtAuthGuard` 사용
 3. **데이터 검증**: class-validator 기반 DTO 검증
 4. **데이터베이스**: TypeORM + PostgreSQL, 마이그레이션 기반 스키마 관리
-5. **보안**: Argon2 해싱, 보안 헤더, CORS 설정
+5. **보안**: Argon2 해싱, 보안 헤더, CORS 설정, CSRF 보호
 6. **이메일**: NodeMailer + SMTP, 템플릿 기반 발송
 7. **환경 설정**: .env 기반 설정, 필수 변수 검증
 8. **에러 처리**: 글로벌 예외 필터, 표준화된 응답 형식

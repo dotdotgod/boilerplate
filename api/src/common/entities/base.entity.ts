@@ -26,7 +26,7 @@ export class BaseEntity {
     select: false,
     type: 'timestamp with time zone',
   })
-  @Exclude()  // 내부 메타데이터
+  @Exclude() // 내부 메타데이터
   deleted_at: Date;
 
   @CreateDateColumn({

@@ -9,6 +9,7 @@ import {
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import * as compression from 'compression';
+import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 
 async function bootstrap() {
@@ -50,6 +51,7 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
+  app.use(cookieParser());
   app.use(compression());
 
   app.useGlobalInterceptors(

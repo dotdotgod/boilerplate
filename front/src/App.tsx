@@ -8,15 +8,41 @@ import ConfirmResetPassword from "./pages/reset-password/confirm";
 import MainPage from "./pages";
 import WorkspaceLayout from "./components/layout/WorkspaceLayout";
 import WorkspaceMain from "./pages/workspace";
-import WorkspaceSessions from "./pages/workspace/sessions";
+import WorkspaceChat from "./pages/workspace/chat";
+import NotFound from "./pages/not-found";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { initializeStores } from "./store";
 import { useEffect } from "react";
+import { useAuthStore } from "./store/auth";
+import { api } from "./api";
 
 function App() {
   useEffect(() => {
-    initializeStores();
+    const initAuth = async () => {
+      // Initialize stores first
+      initializeStores();
+      
+      // Check for stored token and load profile
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        const { setAccessToken, setUser, reset } = useAuthStore.getState();
+        setAccessToken(token);
+        
+        try {
+          // Try to load user profile
+          const user = await api.user.getUserProfile();
+          setUser(user);
+        } catch (error) {
+          // Token is invalid or expired
+          console.error('Failed to load user profile:', error);
+          localStorage.removeItem('access_token');
+          reset();
+        }
+      }
+    };
+    
+    initAuth();
   }, []);
   return (
     <AuthProvider>
@@ -88,8 +114,11 @@ function App() {
           }
         >
           <Route index element={<WorkspaceMain />} />
-          <Route path="sessions" element={<WorkspaceSessions />} />
+          <Route path="chat" element={<WorkspaceChat />} />
         </Route>
+
+        {/* 404 Not Found - 모든 라우트의 마지막에 위치 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AuthProvider>
   );

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   Post,
   Req,
   Res,
@@ -34,6 +35,7 @@ import {
   ResetPasswordResDto,
   VerifyResetTokenResDto,
   ConfirmResetPasswordResDto,
+  UserResDto,
 } from './dtos/user-response.dto';
 import {
   ResetPasswordDto,
@@ -41,9 +43,11 @@ import {
   ConfirmResetPasswordDto,
 } from './dtos/password-reset.dto';
 import { Response, Request } from 'express';
-import { AuthGuard } from '@nestjs/passport';
 import { User } from './entities/user.entity';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { SkipCsrf } from '../common/guards/csrf.guard';
+import { AccessJwtAuthGuard } from './guards/access-jwt-auth.guard';
+import { RefreshJwtAuthGuard } from './guards/refresh-jwt-auth.guard';
 
 @ApiTags('User')
 @Controller({
@@ -55,6 +59,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('google')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Google OAuth authentication' })
   @SerializeOptions({ type: GoogleAuthResDto })
   async googleAuth(
@@ -92,7 +97,8 @@ export class UserController {
   }
 
   @Post('refresh')
-  @UseGuards(AuthGuard('jwt-refresh'))
+  @SkipCsrf()
+  @UseGuards(RefreshJwtAuthGuard)
   @ApiOperation({ summary: 'Refresh access token' })
   @SerializeOptions({ type: RefreshTokenResDto })
   async refreshToken(
@@ -120,6 +126,7 @@ export class UserController {
   }
 
   @Post('sign-in')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Email/password sign in' })
   @SerializeOptions({ type: SignInResDto })
   async signIn(
@@ -147,6 +154,7 @@ export class UserController {
   }
 
   @Post('register-email')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Start email registration' })
   @SerializeOptions({ type: EmailRegistrationResDto })
   async registerEmail(
@@ -175,6 +183,7 @@ export class UserController {
   }
 
   @Post('get-registration-info')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Get registration info by token' })
   @SerializeOptions({ type: GetRegistrationInfoResDto })
   async getRegistrationInfo(
@@ -194,6 +203,7 @@ export class UserController {
   }
 
   @Post('complete-registration')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Complete user registration' })
   @SerializeOptions({ type: CompleteRegistrationResDto })
   async completeRegistration(
@@ -262,6 +272,7 @@ export class UserController {
   }
 
   @Post('verify-email')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Verify email with token' })
   @SerializeOptions({ type: VerifyEmailResDto })
   async verifyEmail(
@@ -281,6 +292,7 @@ export class UserController {
   }
 
   @Post('resend-verification')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Resend verification email' })
   @SerializeOptions({ type: ResendVerificationResDto })
   async resendVerification(
@@ -304,6 +316,7 @@ export class UserController {
   }
 
   @Post('reset-password')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Request password reset' })
   @SerializeOptions({ type: ResetPasswordResDto })
   async resetPassword(
@@ -327,6 +340,7 @@ export class UserController {
   }
 
   @Post('verify-reset-token')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Verify password reset token' })
   @SerializeOptions({ type: VerifyResetTokenResDto })
   async verifyResetToken(
@@ -346,6 +360,7 @@ export class UserController {
   }
 
   @Post('confirm-reset-password')
+  @SkipCsrf()
   @ApiOperation({ summary: 'Confirm password reset' })
   @SerializeOptions({ type: ConfirmResetPasswordResDto })
   async confirmResetPassword(
@@ -362,5 +377,18 @@ export class UserController {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
+  }
+
+  /**
+   * Get current user profile
+   */
+  @Get('profile')
+  @UseGuards(AccessJwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user profile' })
+  @SerializeOptions({ type: UserResDto })
+  getProfile(@Req() req: Request): UserResDto {
+    const user = req.user as User;
+    return user;
   }
 }

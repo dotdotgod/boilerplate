@@ -38,7 +38,15 @@ export class UserService {
   async findByPassword(email: string, password: string) {
     const user = await this.userRepository.findOne({
       where: { email },
-      select: ['id', 'uuid', 'email', 'name', 'password', 'is_verified', 'verified_at'],
+      select: [
+        'id',
+        'uuid',
+        'email',
+        'name',
+        'password',
+        'is_verified',
+        'verified_at',
+      ],
     });
 
     if (!user) {

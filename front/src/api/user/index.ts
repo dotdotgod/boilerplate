@@ -278,6 +278,15 @@ export const confirmResetPassword = async (
   return response.data;
 };
 
+/**
+ * Get current user profile
+ */
+export const getUserProfile = async (): Promise<User> => {
+  const response = await apiClient.get<User>("/user/profile");
+
+  return response.data;
+};
+
 // ==================== 유틸리티 함수들 ====================
 
 /**
@@ -296,6 +305,7 @@ export const userApi = {
   resetPassword,
   verifyResetToken,
   confirmResetPassword,
+  getUserProfile,
 };
 
 export default userApi;
