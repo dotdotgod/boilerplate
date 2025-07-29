@@ -1,0 +1,196 @@
+# Frontend Development Rules for Cursor AI
+
+## Project Context
+React + TypeScript frontend with Zustand state management, Axios for API calls, and Tailwind CSS for styling.
+
+## Core Principles
+
+### Design Philosophy
+- **No form tags**: Use div-based structures for better control and flexibility
+- **Avoid meaningless abstractions**: Keep components simple, direct, and focused
+- **Semantic accessibility**: Use proper ARIA attributes instead of form semantics
+- **Mobile-first responsive design**: Start with 320px+ and scale up
+
+### File Structure & Naming
+- Pages: `kebab-case` folders with `index.tsx` files
+- Components: `PascalCase.tsx` 
+- Hooks: `use[Name].ts` in camelCase
+- API: Domain folders like `api/user/index.ts`
+- Stores: `camelCase.ts` files
+
+### API Architecture
+ALWAYS use the centralized API structure:
+```typescript
+import { api } from "../api";
+const response = await api.user.emailPasswordSignIn(credentials);
+```
+
+NEVER import individual functions from API files:
+```typescript
+// ❌ WRONG
+import { emailPasswordSignIn } from "../api/user";
+
+// ✅ CORRECT  
+import { api } from "../api";
+```
+
+### State Management (Zustand)
+- Use Zustand for business state (user, auth, etc.)
+- Use useState for UI state (loading, error, form state)
+- Always use immer + subscribeWithSelector middleware
+- Separate State and Actions interfaces
+- Optimize useStore calls with destructuring:
+
+```typescript
+// ✅ CORRECT - Single store call with destructuring
+const { user, setUser, reset } = useAuthStore((state) => ({
+  user: state.user,
+  setUser: state.setUser,
+  reset: state.reset,
+}));
+
+// ❌ WRONG - Multiple store calls
+const user = useAuthStore(state => state.user);
+const setUser = useAuthStore(state => state.setUser);
+```
+
+### Custom Hooks Pattern
+```typescript
+export interface UseXxxReturn {
+  // Actions that return Promise<{ success: boolean; error?: string }>
+  // State: isLoading, error
+  // Utilities: clearError
+}
+
+export const useXxx = (): UseXxxReturn => {
+  // 1. Local state (useState for UI state)
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // 2. Store state (single call with destructuring)
+  const { storeActions } = useStore((state) => ({
+    storeActions: state.actions,
+  }));
+  
+  // 3. API calls with try/catch and consistent return
+  const action = useCallback(async (params) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.domain.method(params);
+      // Update store state
+      return { success: true };
+    } catch (err) {
+      // Handle error with isAxiosError
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dependencies]);
+  
+  return { action, isLoading, error, clearError };
+};
+```
+
+### Authentication & Token Management
+- All token management happens in Zustand auth store
+- API functions are pure - they return data only
+- Hooks handle API calls + state updates
+- Use `setAuthenticatedUser(user, accessToken)` for login success
+- Axios interceptors automatically inject tokens from store
+
+### Error Handling
+```typescript
+import { isAxiosError } from "axios";
+
+try {
+  const response = await api.user.method(request);
+  return { success: true };
+} catch (err) {
+  let errorMessage = "기본 에러 메시지";
+  if (isAxiosError(err)) {
+    errorMessage = err.response?.data?.message || "기본 에러 메시지";
+  }
+  setError(errorMessage);
+  return { success: false, error: errorMessage };
+}
+```
+
+### TypeScript Standards
+- Use strict TypeScript settings
+- Define Request/Response interfaces in API files
+- Use type-only imports: `import type { User } from "../api/user"`
+- Props interfaces: `ComponentNameProps`
+- Avoid `any` - use proper typing
+
+### Component Patterns
+```typescript
+// Default export for pages and main components
+export default function PageName() {
+  return <div>Content</div>;
+}
+
+// Named exports for hooks and utilities
+export const useCustomHook = () => {};
+export const utilityFunction = () => {};
+```
+
+### Routing with React Router
+```typescript
+import { useNavigate } from "react-router";
+
+const navigate = useNavigate();
+// Use replace for post-auth redirects
+navigate(destination, { replace: true });
+```
+
+### Import Organization
+```typescript
+// 1. React and external libraries
+import { useState, useCallback } from "react";
+import { useNavigate } from "react-router";
+import { isAxiosError } from "axios";
+
+// 2. Internal imports
+import { api } from "../api";
+import { useAuthStore } from "../store/auth";
+import type { User } from "../api/user";
+```
+
+## Code Quality Rules
+
+### NEVER Do
+- Import individual API functions directly
+- Put API calls in Zustand stores  
+- Use multiple useStore calls when one with destructuring works
+- Put loading/error state in global store for local operations
+- Create files without proper TypeScript types
+- Use `any` type
+- Ignore build errors or TypeScript errors
+
+### ALWAYS Do
+- Use the centralized `api.domain.method()` pattern
+- Separate UI state (useState) from business state (Zustand)
+- Handle errors consistently with proper typing
+- Use proper file naming conventions
+- Export types from API files and re-use them
+- Write hooks that return consistent `{ success, error }` patterns
+- Use `useCallback` for functions that depend on props/state
+- Follow the established folder structure
+
+### File Creation Guidelines
+When creating new files:
+
+1. **API files**: Add to appropriate domain folder, export via `api/index.ts`
+2. **Hooks**: Follow the established pattern with proper TypeScript interfaces
+3. **Pages**: Use folder + index.tsx structure
+4. **Components**: PascalCase naming with proper TypeScript props
+5. **Stores**: Use Zustand with immer + subscribeWithSelector
+
+### Testing & Validation
+- Always run `npm run build` to validate TypeScript
+- Check for proper import/export structure
+- Ensure consistent error handling patterns
+- Verify proper state management separation
+
+This codebase follows a strict separation of concerns with clear patterns for API calls, state management, and error handling. Follow these rules to maintain consistency and code quality.

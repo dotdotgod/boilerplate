@@ -1,0 +1,175 @@
+# Backend API Cursor Rules
+
+You are an expert NestJS backend developer working on an authentication system with PostgreSQL, TypeORM, and JWT tokens.
+
+## Project Context
+
+This is the backend API service (`/api` directory) of a full-stack authentication system:
+
+- **Framework**: NestJS 11 + TypeScript
+- **Database**: PostgreSQL + TypeORM 0.3.25
+- **Authentication**: JWT (access/refresh), Passport.js, Google OAuth 2.0
+- **Email**: NodeMailer with SMTP
+- **Security**: Argon2, Helmet, CORS
+- **Package Manager**: pnpm
+
+## Code Style & Conventions
+
+### File Structure
+
+- Controllers: `{domain}.controller.ts`
+- Services: `{domain}.service.ts`
+- DTOs: `kebab-case.dto.ts`
+- Entities: `kebab-case.entity.ts`
+- Guards: `kebab-case.guard.ts`
+- Strategies: `kebab-case.strategy.ts`
+
+### TypeScript Rules
+
+- Use strict TypeScript settings
+- Import types with `import type`
+- Use class-validator decorators for DTOs
+- Use TypeORM decorators for entities
+- Follow NestJS dependency injection patterns
+
+### API Design
+
+- RESTful endpoints under `/v1/{domain}`
+- Standardized response formats (success/error)
+- Consistent DTO validation with class-validator
+- Proper HTTP status codes and error messages
+
+## Authentication System
+
+### JWT Strategy
+
+- **Access Token**: 15min expiry, Bearer header
+- **Refresh Token**: 7d expiry, HTTP-only cookie
+- Use guards: `AccessJwtAuthGuard`, `RefreshJwtAuthGuard`
+
+### Security Requirements
+
+- Hash passwords with Argon2
+- Validate all inputs with class-validator
+- Use CORS and security headers
+- Never log sensitive information
+
+## Database Patterns
+
+### Entity Design
+
+- Extend `BaseEntity` (id, createdAt, updatedAt)
+- Use UUID primary keys
+- Proper relationships with TypeORM decorators
+- Follow snake_case for table/column names
+
+### Migration Management
+
+- Generate migrations: `pnpm run typeorm:migration:generate`
+- Run migrations: `pnpm run typeorm:migration:run`
+- Always review generated migrations before running
+
+## Code Generation Rules
+
+### When creating new features:
+
+1. Create DTO classes with validation decorators
+2. Create entity classes extending BaseEntity
+3. Create service with proper dependency injection
+4. Create controller with proper decorators and guards
+5. Update module imports/exports
+6. Generate and run migrations if needed
+
+### Error Handling
+
+- Use NestJS built-in exceptions (BadRequestException, etc.)
+- Return standardized error responses
+- Log errors appropriately (no sensitive data)
+- Use global exception filters when needed
+
+### Email System
+
+- Use MailService for all email operations
+- Generate secure tokens with expiration
+- Create HTML templates for different email types
+- Handle SMTP errors gracefully
+
+## Environment & Configuration
+
+### Required Environment Variables
+
+- Database: DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_DATABASE
+- JWT: JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
+- OAuth: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+- Email: SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS
+- Frontend: BASE_URL
+
+### Development Commands
+
+- `pnpm run start:dev` - Development with watch mode
+- `pnpm run build` - Production build
+- `pnpm run lint` - ESLint check
+- `pnpm run test` - Unit tests
+- `pnpm run test:e2e` - E2E tests
+
+## Best Practices
+
+### Security
+
+- Always validate and sanitize inputs
+- Use parameterized queries (TypeORM handles this)
+- Implement rate limiting for auth endpoints
+- Use secure cookie settings for refresh tokens
+- Never expose internal error details to clients
+
+### Performance
+
+- Use database indexes for frequently queried fields
+- Implement pagination for list endpoints
+- Use connection pooling
+- Cache frequently accessed data when appropriate
+
+### Code Quality
+
+- Write unit tests for services
+- Write E2E tests for critical flows
+- Use TypeScript strict mode
+- Follow single responsibility principle
+- Keep controllers thin, business logic in services
+
+### Documentation
+
+- Document all API endpoints with Swagger/OpenAPI
+- Add JSDoc comments for complex methods
+- Keep README and configuration files updated
+- Document environment variable requirements
+
+## Current Implementation Status
+
+### Completed Features
+
+- User authentication (email/password + Google OAuth)
+- JWT token management (access/refresh)
+- Email verification system
+- Password reset functionality
+- Database schema with migrations
+- Basic security setup
+
+### Key Entities
+
+- `User`: Main user entity with email, password, name
+- `RefreshToken`: JWT refresh token management
+- `EmailVerification`: Email verification tokens
+- `OAuth`: Social login provider data
+
+### Main API Endpoints
+
+- `POST /v1/user/sign-in` - Email/password login
+- `POST /v1/user/google` - Google OAuth login
+- `POST /v1/user/register-email` - Start email registration
+- `POST /v1/user/complete-registration` - Finish registration
+- `POST /v1/user/refresh` - Refresh access token
+- `POST /v1/user/reset-password` - Request password reset
+- `POST /v1/user/confirm-reset-password` - Confirm password reset
+
+Always refer to the existing codebase patterns and maintain consistency with the established architecture.

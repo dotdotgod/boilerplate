@@ -1,4 +1,4 @@
-import { Exclude } from 'class-transformer';
+import { Exclude, Expose } from 'class-transformer';
 import {
   CreateDateColumn,
   DeleteDateColumn,
@@ -11,11 +11,13 @@ import {
 
 export class BaseEntity {
   @PrimaryGeneratedColumn()
+  @Expose()
   id: number;
 
   @Generated('uuid')
   @Column({ unique: true })
   @Index()
+  @Expose()
   uuid: string;
 
   @DeleteDateColumn({
@@ -24,6 +26,7 @@ export class BaseEntity {
     select: false,
     type: 'timestamp with time zone',
   })
+  @Exclude()  // 내부 메타데이터
   deleted_at: Date;
 
   @CreateDateColumn({
@@ -31,6 +34,7 @@ export class BaseEntity {
     default: () => 'CURRENT_TIMESTAMP',
     type: 'timestamp with time zone',
   })
+  @Expose()
   created_at: Date;
 
   @Exclude()

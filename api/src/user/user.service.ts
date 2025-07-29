@@ -38,6 +38,7 @@ export class UserService {
   async findByPassword(email: string, password: string) {
     const user = await this.userRepository.findOne({
       where: { email },
+      select: ['id', 'uuid', 'email', 'name', 'password', 'is_verified', 'verified_at'],
     });
 
     if (!user) {
@@ -492,5 +493,92 @@ export class UserService {
     await this.emailVerificationRepository.save(verification);
 
     return user;
+  }
+
+  async sendPasswordResetEmail(email: string): Promise<boolean> {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      // Don't reveal whether the email exists
+      return true;
+    }
+
+    // Generate a password reset token
+    const token = uuidv4();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10); // 10 minutes expiry
+
+    // Clean up old tokens for this user
+    await this.emailVerificationRepository
+      .createQueryBuilder()
+      .delete()
+      .where('user_id = :userId AND is_used = :isUsed', {
+        userId: user.id,
+        isUsed: false,
+      })
+      .execute();
+
+    // Save the new token
+    await this.emailVerificationRepository.save({
+      user_id: user.id,
+      email: user.email,
+      token,
+      expires_at: expiresAt,
+      is_used: false,
+    });
+
+    // Send the reset email
+    await this.mailService.sendPasswordResetEmail(user.email, user.name, token);
+
+    return true;
+  }
+
+  async verifyPasswordResetToken(token: string): Promise<string> {
+    const verification = await this.emailVerificationRepository.findOne({
+      where: { token, is_used: false },
+    });
+
+    if (!verification) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    if (verification.expires_at < new Date()) {
+      throw new BadRequestException('Reset token has expired');
+    }
+
+    return verification.email;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const verification = await this.emailVerificationRepository.findOne({
+      where: { token, is_used: false },
+    });
+
+    if (!verification) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    if (verification.expires_at < new Date()) {
+      throw new BadRequestException('Reset token has expired');
+    }
+
+    // Find the user
+    const user = await this.userRepository.findOne({
+      where: { id: verification.user_id },
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    // Hash the new password
+    const hashedPassword = await argon2.hash(newPassword);
+
+    // Update the user's password
+    user.password = hashedPassword;
+    await this.userRepository.save(user);
+
+    // Mark the token as used
+    verification.is_used = true;
+    await this.emailVerificationRepository.save(verification);
   }
 }

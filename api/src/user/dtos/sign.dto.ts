@@ -1,46 +1,36 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
-import { IsString, IsEmail } from 'class-validator';
+import { ApiProperty, PickType } from '@nestjs/swagger';
+import { IsString, MinLength, IsEmail } from 'class-validator';
 import { User } from '../entities/user.entity';
-import { Type } from 'class-transformer';
 
+/**
+ * Sign In Request DTO
+ */
 export class SignInReqDto {
-  @IsString()
-  @ApiProperty()
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
   email: string;
+
+  @ApiProperty({ minimum: 8 })
   @IsString()
-  @ApiProperty()
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password: string;
 }
 
-export class SignInUserDto extends OmitType(User, [
-  'created_at',
-  'deleted_at',
-  'id',
-  'oauths',
-  'password',
-  'updated_at',
-]) {}
-
-export class SignInResDto {
-  @Type(() => SignInUserDto)
-  @ApiProperty()
-  user: SignInUserDto;
-
-  @ApiProperty()
-  access_token: string;
-}
-
+/**
+ * Sign Up Request DTO (if needed for direct signup)
+ */
 export class SignUpReqDto {
-  @IsString()
-  @ApiProperty()
+  @ApiProperty({ example: 'user@example.com' })
+  @IsEmail()
   email: string;
 
+  @ApiProperty({ minimum: 8 })
   @IsString()
-  @ApiProperty()
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password: string;
 
+  @ApiProperty({ example: 'John Doe' })
   @IsString()
-  @ApiProperty()
   name: string;
 }
 
@@ -67,11 +57,21 @@ export interface GoogleUserInfo {
   locale?: string;
 }
 
+/**
+ * Google Auth Request DTO
+ */
 export class GoogleAuthDto {
+  @ApiProperty()
+  @IsString()
   access_token: string;
 }
 
+/**
+ * Refresh Token Request DTO
+ */
 export class RefreshTokenDto {
+  @ApiProperty({ required: false })
+  @IsString()
   refresh_token?: string;
 }
 
@@ -81,30 +81,28 @@ export class VerifyEmailDto {
   token: string;
 }
 
-export class ResendVerificationDto {
-  @IsString()
-  @ApiProperty()
-  email: string;
-}
+export class ResendVerificationDto extends PickType(User, ['email'] as const) {}
 
-// New DTOs for email-first registration flow
-export class EmailRegistrationDto {
-  @IsEmail()
-  @ApiProperty()
-  email: string;
-}
+/**
+ * Email Registration Request DTO
+ */
+export class EmailRegistrationDto extends PickType(User, ['email'] as const) {}
 
+/**
+ * Complete Registration Request DTO
+ */
 export class CompleteRegistrationDto {
-  @IsString()
   @ApiProperty()
+  @IsString()
   token: string;
 
+  @ApiProperty({ example: 'John Doe' })
   @IsString()
-  @ApiProperty()
   name: string;
 
+  @ApiProperty({ minimum: 8 })
   @IsString()
-  @ApiProperty()
+  @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password: string;
 }
 

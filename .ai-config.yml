@@ -1,0 +1,217 @@
+# AI Assistant Configuration for Full-Stack Authentication System
+# Compatible with Claude Code, Cursor, and Gemini CLI
+
+project:
+  name: "Full-Stack Authentication System"
+  type: "web-application"
+  architecture: "monorepo"
+  version: "1.0.0"
+
+structure:
+  backend:
+    path: "./api"
+    framework: "nestjs"
+    language: "typescript"
+    database: "postgresql"
+    orm: "typeorm"
+
+  frontend:
+    path: "./front"
+    framework: "react"
+    language: "typescript"
+    bundler: "vite"
+    ui: "radix-ui"
+    styling: "tailwindcss"
+
+  infrastructure:
+    proxy: "./proxy"
+    compose: "./docker-compose.yml"
+
+technologies:
+  backend:
+    - "NestJS 11"
+    - "TypeScript"
+    - "PostgreSQL"
+    - "TypeORM 0.3.25"
+    - "JWT Authentication"
+    - "Passport.js"
+    - "Google OAuth 2.0"
+    - "NodeMailer"
+    - "Argon2"
+    - "Helmet"
+
+  frontend:
+    - "React 18"
+    - "TypeScript"
+    - "Vite"
+    - "Zustand"
+    - "Radix UI"
+    - "Tailwind CSS"
+    - "Axios"
+    - "React Router v7"
+
+  infrastructure:
+    - "Docker"
+    - "Docker Compose"
+    - "Nginx"
+    - "PostgreSQL"
+
+conventions:
+  backend:
+    files:
+      controllers: "{domain}.controller.ts"
+      services: "{domain}.service.ts"
+      modules: "{domain}.module.ts"
+      dtos: "kebab-case.dto.ts"
+      entities: "kebab-case.entity.ts"
+      guards: "kebab-case.guard.ts"
+      strategies: "kebab-case.strategy.ts"
+
+    patterns:
+      - "Use NestJS dependency injection"
+      - "Follow RESTful API design"
+      - "Use TypeORM entities with relationships"
+      - "Implement proper authentication guards"
+      - "Use class-validator for DTOs"
+      - "Handle errors with NestJS exceptions"
+
+  frontend:
+    files:
+      pages: "kebab-case folders with index.tsx"
+      components: "PascalCase.tsx"
+      hooks: "useCapitalCase.ts"
+      api: "domain/index.ts"
+      stores: "camelCase.ts"
+
+    patterns:
+      - "No form tags - use div structures"
+      - "Avoid meaningless abstractions"
+      - "Use Zustand for business state"
+      - "Use useState for UI state"
+      - "Centralized API client pattern"
+      - "Consistent error handling"
+      - "Mobile-first responsive design"
+
+authentication:
+  strategy: "JWT with refresh tokens"
+  providers:
+    - "Email/Password"
+    - "Google OAuth 2.0"
+
+  tokens:
+    access:
+      expiry: "15 minutes"
+      storage: "memory (Zustand)"
+    refresh:
+      expiry: "7 days"
+      storage: "HTTP-only cookie"
+
+  flow:
+    - "Registration with email verification"
+    - "Login with automatic token refresh"
+    - "Protected routes with guards"
+    - "Password reset functionality"
+
+api_endpoints:
+  authentication:
+    - "POST /v1/user/sign-in"
+    - "POST /v1/user/google"
+    - "POST /v1/user/refresh"
+    - "POST /v1/user/logout"
+
+  registration:
+    - "POST /v1/user/register-email"
+    - "POST /v1/user/get-registration-info"
+    - "POST /v1/user/complete-registration"
+    - "POST /v1/user/verify-email"
+    - "POST /v1/user/resend-verification"
+
+  password_reset:
+    - "POST /v1/user/reset-password"
+    - "POST /v1/user/verify-reset-token"
+    - "POST /v1/user/confirm-reset-password"
+
+database_schema:
+  tables:
+    - "users (id, email, name, password, isEmailVerified)"
+    - "refresh_tokens (id, token, userId, expiresAt)"
+    - "email_verifications (id, email, token, expiresAt)"
+    - "oauth_providers (id, provider, providerId, userId)"
+
+development:
+  commands:
+    backend:
+      dev: "pnpm run start:dev"
+      build: "pnpm run build"
+      test: "pnpm run test"
+      migration_generate: "pnpm run typeorm:migration:generate"
+      migration_run: "pnpm run typeorm:migration:run"
+
+    frontend:
+      dev: "pnpm dev"
+      build: "pnpm build"
+      lint: "pnpm lint"
+      typecheck: "pnpm typecheck"
+
+    docker:
+      start: "docker-compose up -d"
+      logs: "docker-compose logs -f"
+      stop: "docker-compose down"
+
+environment_variables:
+  required:
+    - "DB_HOST"
+    - "DB_PORT"
+    - "DB_USER"
+    - "DB_PASS"
+    - "DB_DATABASE"
+    - "JWT_ACCESS_SECRET"
+    - "JWT_REFRESH_SECRET"
+    - "GOOGLE_CLIENT_ID"
+    - "GOOGLE_CLIENT_SECRET"
+    - "SMTP_HOST"
+    - "SMTP_PORT"
+    - "SMTP_USER"
+    - "SMTP_PASS"
+    - "BASE_URL"
+
+context_files:
+  - "./CLAUDE.md"
+  - "./api/CLAUDE.md"
+  - "./front/CLAUDE.md"
+  - "./front/feature/authentication/PRD.md"
+  - "./.cursorrules"
+  - "./api/.cursorrules"
+  - "./front/.cursorrules"
+
+security:
+  principles:
+    - "Never log sensitive information"
+    - "Use parameterized queries"
+    - "Validate all inputs"
+    - "Implement proper CORS"
+    - "Use secure cookie settings"
+    - "Hash passwords with Argon2"
+    - "Implement rate limiting"
+
+accessibility:
+  standards: "WCAG 2.1 AA"
+  features:
+    - "Keyboard navigation"
+    - "Screen reader support"
+    - "Proper ARIA attributes"
+    - "Semantic HTML alternatives"
+    - "Focus management"
+
+responsive_design:
+  breakpoints:
+    mobile: "320px+"
+    tablet: "768px+"
+    desktop: "1024px+"
+  approach: "mobile-first"
+
+deployment:
+  environment: "docker-compose"
+  proxy: "nginx"
+  database: "postgresql"
+  ssl: "recommended for production"

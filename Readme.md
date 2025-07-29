@@ -38,7 +38,7 @@ ACCESS_TOKEN_EXPIRES_IN=15m                       # Access Token expiration time
 REFRESH_TOKEN_EXPIRES_IN=7d                       # Refresh Token expiration time in days
 
 # Frontend Settings
-FRONTEND_URL=http://localhost:80                  # Frontend URL for OAuth redirects
+BASE_URL=http://localhost:80                  # Frontend URL for OAuth redirects
 
 # SMTP Email Settings
 SMTP_HOST=smtp.gmail.com                          # SMTP server host
@@ -50,10 +50,12 @@ SMTP_PASS=your_app_password                      # SMTP password (app password f
 ### Environment Variable Descriptions
 
 #### Application Settings
+
 - `NODE_ENV`: Application runtime environment (development/production)
 - `PORT`: Proxy server port accessible from outside
 
 #### Database Settings
+
 - `DB_HOST`: Database host address
 - `DB_PORT`: Database port (PostgreSQL default: 5432)
 - `DB_USER`: PostgreSQL username
@@ -61,19 +63,23 @@ SMTP_PASS=your_app_password                      # SMTP password (app password f
 - `DB_DATABASE`: Database name to use
 
 #### Google OAuth Settings
+
 - `GOOGLE_CLIENT_ID`: Google OAuth Client ID from Google Cloud Console
 - `GOOGLE_CLIENT_SECRET`: Google OAuth Client Secret from Google Cloud Console
 
 #### JWT Settings
+
 - `JWT_ACCESS_SECRET`: Secret key for JWT access token generation (required)
 - `JWT_REFRESH_SECRET`: Secret key for JWT refresh token generation (required)
 - `ACCESS_TOKEN_EXPIRES_IN`: Access token expiration time (e.g., 15m, 1h, 1d)
 - `REFRESH_TOKEN_EXPIRES_IN`: Refresh token expiration time in days (e.g., 7d)
 
 #### Frontend Settings
-- `FRONTEND_URL`: Frontend application URL for OAuth redirects
+
+- `BASE_URL`: Frontend application URL for OAuth redirects
 
 #### SMTP Email Settings
+
 - `SMTP_HOST`: SMTP server hostname (e.g., smtp.gmail.com)
 - `SMTP_PORT`: SMTP server port (587 for TLS, 465 for SSL)
 - `SMTP_USER`: SMTP username (usually your email address)

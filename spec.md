@@ -152,7 +152,7 @@ ACCESS_TOKEN_EXPIRES_IN=15m
 REFRESH_TOKEN_EXPIRES_IN=7d
 
 # Frontend Settings
-FRONTEND_URL=http://localhost:80
+BASE_URL=http://localhost:80
 ```
 
 ### Frontend 설정

@@ -1,0 +1,144 @@
+# Full-Stack Authentication System - Cursor Rules
+
+You are working on a full-stack authentication system with separate backend and frontend applications.
+
+## Project Structure
+
+```
+boilerplate/
+├── api/          # NestJS Backend API
+├── front/        # React Frontend
+├── proxy/        # Nginx reverse proxy
+└── docker-compose.yml
+```
+
+## Architecture Overview
+
+### Backend (`/api`)
+- **Framework**: NestJS 11 + TypeScript
+- **Database**: PostgreSQL + TypeORM 0.3.25
+- **Authentication**: JWT (access/refresh), Passport.js, Google OAuth 2.0
+- **Email**: NodeMailer with SMTP
+- **Security**: Argon2, Helmet, CORS
+
+### Frontend (`/front`)
+- **Framework**: React 18 + TypeScript + Vite
+- **State Management**: Zustand with immer + subscribeWithSelector
+- **UI**: Radix UI + Tailwind CSS
+- **HTTP Client**: Axios with interceptors
+- **Routing**: React Router v7
+
+### Infrastructure
+- **Proxy**: Nginx (routes `/v1/*` to API, `/*` to frontend)
+- **Database**: PostgreSQL with migrations
+- **Package Manager**: pnpm (both backend and frontend)
+
+## Development Commands
+
+### Backend (from `/api`)
+```bash
+pnpm run start:dev    # Development server with watch
+pnpm run build        # Production build
+pnpm run lint         # ESLint check
+pnpm run test         # Unit tests
+pnpm run test:e2e     # E2E tests
+pnpm run typeorm:migration:generate  # Generate migration
+pnpm run typeorm:migration:run       # Run migration
+```
+
+### Frontend (from `/front`)
+```bash
+pnpm dev          # Development server
+pnpm build        # Production build
+pnpm lint         # ESLint check
+pnpm typecheck    # TypeScript check
+```
+
+### Full Stack (from root)
+```bash
+docker-compose up -d        # Start all services
+docker-compose logs -f api  # View API logs
+docker-compose logs -f front # View frontend logs
+```
+
+## Context-Specific Rules
+
+### When working in `/api`:
+- Follow NestJS patterns and conventions
+- Use TypeORM entities with proper relationships
+- Implement proper authentication guards
+- Handle database migrations carefully
+- Follow RESTful API design principles
+- Use proper DTO validation with class-validator
+
+### When working in `/front`:
+- No form tags - use div-based structures
+- Avoid meaningless abstractions
+- Use Zustand for business state, useState for UI state
+- Follow the centralized API pattern: `api.domain.method()`
+- Implement proper token management
+- Ensure accessibility with ARIA attributes
+
+### Cross-Service Integration:
+- API endpoints are accessed via `/v1/*` routes
+- Frontend runs on port 80 (via proxy)
+- Backend runs on port 3000 (internal)
+- Ensure CORS is properly configured
+- JWT tokens are managed by frontend, validated by backend
+
+## Authentication Flow
+
+1. **Registration**: Frontend → API email registration → Email verification → Complete registration
+2. **Login**: Email/password or Google OAuth → JWT tokens → Protected routes
+3. **Token Management**: Automatic refresh via axios interceptors
+4. **Route Protection**: Frontend guards + backend JWT validation
+
+## Environment Setup
+
+Required environment variables (root `.env`):
+- Database: `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_DATABASE`
+- JWT: `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`
+- OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- Email: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`
+- URLs: `BASE_URL`
+
+## Best Practices
+
+### Security
+- Never log sensitive information
+- Use parameterized queries (TypeORM handles this)
+- Validate all inputs on both frontend and backend
+- Implement proper CORS and security headers
+- Use secure cookie settings for refresh tokens
+
+### Code Quality
+- Follow TypeScript strict mode on both sides
+- Write tests for critical functionality
+- Use proper error handling patterns
+- Maintain consistent code style
+- Document complex business logic
+
+### Performance
+- Use database indexes appropriately
+- Implement proper caching strategies
+- Optimize bundle sizes
+- Use connection pooling
+- Implement pagination for list endpoints
+
+## Current Status
+
+### Completed Features
+- User registration with email verification
+- Email/password and Google OAuth login
+- JWT token management (access/refresh)
+- Password reset functionality
+- Protected routes and authentication guards
+- Database schema with migrations
+- Responsive UI with accessibility features
+
+### Key Components
+- Backend: User, RefreshToken, EmailVerification, OAuth entities
+- Frontend: Auth store, custom hooks, protected routes, responsive pages
+- Infrastructure: Docker setup, Nginx proxy, PostgreSQL database
+
+Always refer to the specific `CLAUDE.md` and `.cursorrules` files in each directory for detailed implementation guidelines specific to that part of the system.

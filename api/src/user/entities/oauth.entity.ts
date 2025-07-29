@@ -1,7 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from './user.entity';
-import { Type } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { IsNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -18,6 +18,7 @@ export class Oauth extends BaseEntity {
   @Index()
   @ApiProperty()
   @IsNumber()
+  @Expose()
   user_id: number;
 
   @ManyToOne(() => User, (user) => user.id)
@@ -26,15 +27,18 @@ export class Oauth extends BaseEntity {
   user: User;
 
   @Column({ nullable: false, type: 'enum', enum: OauthProviderEnum })
+  @Expose()
   provider: OauthProviderEnum;
 
   @Column({ nullable: false })
   @ApiProperty()
   @IsString()
+  @Expose()
   provider_id: string;
 
   @Column({ nullable: false, type: 'jsonb' })
   @ApiProperty()
   @IsString()
+  @Exclude()  // 민감한 정보: OAuth 제공자의 원본 응답 데이터
   origin_response: string;
 }

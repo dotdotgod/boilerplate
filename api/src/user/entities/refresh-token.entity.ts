@@ -1,7 +1,7 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from './user.entity';
-import { Type } from 'class-transformer';
+import { Exclude, Expose, Type } from 'class-transformer';
 import { IsString, IsDate } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -11,6 +11,7 @@ export class RefreshToken extends BaseEntity {
   @Column({ nullable: false })
   @Index()
   @ApiProperty()
+  @Expose()
   user_id: number;
 
   @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
@@ -22,11 +23,13 @@ export class RefreshToken extends BaseEntity {
   @Index()
   @ApiProperty()
   @IsString()
+  @Exclude()  // 민감한 정보: 토큰 해시
   token_hash: string;
 
   @Column({ nullable: false, type: 'timestamp' })
   @Index()
   @ApiProperty()
   @IsDate()
+  @Expose()
   expires_at: Date;
 }

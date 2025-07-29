@@ -80,7 +80,7 @@ export class MailService {
     userName: string,
     resetToken: string,
   ): Promise<boolean> {
-    const resetUrl = `${this.configService.get<string>('BASE_URL')}/reset-password?token=${resetToken}`;
+    const resetUrl = `${this.configService.get<string>('BASE_URL')}/reset-password/confirm?token=${resetToken}`;
     const subject = 'Password Reset Request';
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
