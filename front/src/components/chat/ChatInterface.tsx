@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,21 +16,71 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import axios from "axios";
+import { useNavigate } from "react-router";
 
 export function ChatInterface() {
-  const { accessToken } = useAuthStore();
+  const { setAccessToken, reset } = useAuthStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+
+  const handleRefreshToken = useCallback(async () => {
+    try {
+      const response = await axios.post(
+        "/v1/user/refresh",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+      const { accessToken: newAccessToken } = response.data;
+      setAccessToken(newAccessToken);
+      return newAccessToken;
+    } catch (error) {
+      reset();
+      navigate("/sign-in", { replace: true });
+      throw error;
+    }
+  }, [setAccessToken, reset, navigate]);
+
+  const customFetch = useCallback(
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const response = await fetch(input, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          Authorization: `Bearer ${useAuthStore.getState().getAccessToken()}`,
+        },
+      });
+
+      // Handle 401 error
+      if (response.status === 401) {
+        // Try to refresh token
+        const newAccessToken = await handleRefreshToken();
+
+        // Retry with new token
+        return fetch(input, {
+          ...init,
+          headers: {
+            ...init?.headers,
+            Authorization: `Bearer ${newAccessToken}`,
+          },
+        });
+      }
+
+      return response;
+    },
+    [handleRefreshToken]
+  );
 
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } =
     useChat({
       api: "/v1/ai-agent/stream",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       body: {
         model: "gemini-2.0-flash",
         maxTokens: 10000,
       },
+      fetch: customFetch,
       onError: (error) => {
         console.error("Chat error:", error);
       },
@@ -65,13 +115,13 @@ export function ChatInterface() {
                 </div>
               )}
               {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={cn(
-                      "flex gap-3",
-                      message.role === "user" ? "justify-end" : "justify-start"
-                    )}
-                  >
+                <div
+                  key={message.id}
+                  className={cn(
+                    "flex gap-3",
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  )}
+                >
                   {message.role === "assistant" && (
                     <Avatar className="h-8 w-8">
                       <AvatarFallback>
@@ -182,7 +232,7 @@ export function ChatInterface() {
                       </AvatarFallback>
                     </Avatar>
                   )}
-                  </div>
+                </div>
               ))}
               {isLoading && (
                 <div className="flex gap-3 justify-start">

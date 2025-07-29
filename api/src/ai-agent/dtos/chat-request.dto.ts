@@ -61,5 +61,4 @@ export class ChatRequestDto {
   @Min(1)
   @Max(10000)
   maxTokens?: number;
-
 }
