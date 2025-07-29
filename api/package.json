@@ -23,8 +23,8 @@
     "typeorm:migration:generate": "ts-node ./migrator/scripts/migration-generate.ts",
     "posttypeorm:migration:generate": "ts-node ./migrator/scripts/refine-migration.ts",
     "typeorm:migration:create": "ts-node ./migrator/scripts/migration-create.ts",
-    "typeorm:migration:revert": "yarn typeorm migration:revert --dataSource ./migrator/scripts/migration.config.ts",
-    "typeorm:migration:run": "yarn typeorm migration:run -t=false --dataSource ./migrator/scripts/migration.config.ts"
+    "typeorm:migration:revert": "pnpm run typeorm migration:revert --dataSource ./migrator/scripts/migration.config.ts",
+    "typeorm:migration:run": "pnpm run typeorm migration:run -t=false --dataSource ./migrator/scripts/migration.config.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.12",
