@@ -109,6 +109,8 @@ export class UserService {
         provider: options.provider,
         provider_id: options.providerId,
         origin_response: options.originResponse || {},
+        is_verified: true,
+        verified_at: new Date(),
       });
     }
 
@@ -224,7 +226,6 @@ export class UserService {
     originResponse: any,
   ): Promise<User> {
     let user = await this.findByOauth(provider, oauthUser.provider_id);
-
     if (!user) {
       user = await this.findByEmail(oauthUser.email);
     }
@@ -494,11 +495,6 @@ export class UserService {
     const user = await this.createUser(name, verification.email, {
       password,
     });
-
-    // Mark user as verified immediately
-    user.is_verified = true;
-    user.verified_at = new Date();
-    await this.userRepository.save(user);
 
     // Mark token as used
     verification.is_used = true;

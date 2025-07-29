@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuthStore } from "../store/auth";
 import { api } from "../api";
 import type {
   VerifyEmailRequest,
@@ -25,8 +24,6 @@ export const useEmailVerification = (
   redirectTo?: string
 ): UseEmailVerificationReturn => {
   const navigate = useNavigate();
-  const setUser = useAuthStore((state) => state.setUser);
-  const user = useAuthStore((state) => state.user);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,12 +38,7 @@ export const useEmailVerification = (
       try {
         const request: VerifyEmailRequest = { token };
         await api.user.verifyEmail(request);
-        
-        // Update user state on success
-        if (user) {
-          setUser({ ...user, is_verified: true, verified_at: new Date() });
-        }
-        
+
         if (redirectTo) {
           // Redirect on successful verification (optional)
           navigate(redirectTo, { replace: true });
@@ -65,33 +57,30 @@ export const useEmailVerification = (
         setIsLoading(false);
       }
     },
-    [user, setUser, navigate, redirectTo]
+    [navigate, redirectTo]
   );
 
-  const resendVerificationEmailHandler = useCallback(
-    async (email: string) => {
-      setIsLoading(true);
-      setError(null);
+  const resendVerificationEmailHandler = useCallback(async (email: string) => {
+    setIsLoading(true);
+    setError(null);
 
-      try {
-        const request: ResendVerificationRequest = { email };
-        await api.user.resendVerificationEmail(request);
-        
-        return { success: true };
-      } catch (err) {
-        let errorMessage = "Failed to resend verification email.";
-        if (isAxiosError(err)) {
-          errorMessage =
-            err.response?.data?.message || "Failed to resend verification email.";
-        }
-        setError(errorMessage);
-        return { success: false, error: errorMessage };
-      } finally {
-        setIsLoading(false);
+    try {
+      const request: ResendVerificationRequest = { email };
+      await api.user.resendVerificationEmail(request);
+
+      return { success: true };
+    } catch (err) {
+      let errorMessage = "Failed to resend verification email.";
+      if (isAxiosError(err)) {
+        errorMessage =
+          err.response?.data?.message || "Failed to resend verification email.";
       }
-    },
-    []
-  );
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   return {
     verifyEmail: verifyEmailHandler,
