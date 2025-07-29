@@ -90,6 +90,7 @@ export class UserService {
       password?: string;
       provider?: OauthProviderEnum;
       providerId?: string;
+      originResponse?: any;
     },
   ) {
     const user = await this.userRepository.save({
@@ -107,6 +108,7 @@ export class UserService {
         user_id: user.id,
         provider: options.provider,
         provider_id: options.providerId,
+        origin_response: options.originResponse || {},
       });
     }
 
@@ -154,6 +156,7 @@ export class UserService {
     const user = await this.validateOAuthUser(
       oauthUser,
       OauthProviderEnum.GOOGLE,
+      googleUserInfo,
     );
 
     const tokens = await this.generateTokens(user);
@@ -218,6 +221,7 @@ export class UserService {
   async validateOAuthUser(
     oauthUser: OAuthUser,
     provider: OauthProviderEnum,
+    originResponse: any,
   ): Promise<User> {
     let user = await this.findByOauth(provider, oauthUser.provider_id);
 
@@ -230,6 +234,7 @@ export class UserService {
       user = await this.createUser(oauthUser.name, oauthUser.email, {
         provider,
         providerId: oauthUser.provider_id,
+        originResponse,
       });
     }
 
